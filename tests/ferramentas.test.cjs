@@ -39,3 +39,14 @@ test('notas antigas são opcionais; normalização protege tipos e limita textos
   assert.equal(huge[0].content.length, 12000);
   assert.equal(huge[0].title.length, 120);
 });
+
+test('anexos válidos sobrevivem ao backup e formatos inseguros são rejeitados', () => {
+  const pdf = {id:'a1',name:'acordo.pdf',mime:'application/pdf',data:'data:application/pdf;base64,JVBERi0xLjQ='};
+  const note = normalizeNotes([{id:'n1',title:'Acordo',attachments:[pdf,{id:'evil',name:'script.html',mime:'text/html',data:'data:text/html;base64,YQ=='}]}]);
+  assert.equal(note[0].attachments.length,1);
+  assert.equal(note[0].attachments[0].name,'acordo.pdf');
+  const restored = normalizeNotes(JSON.parse(JSON.stringify(note)));
+  assert.equal(restored[0].attachments[0].data,pdf.data);
+  const huge = {...pdf,id:'huge',data:'data:application/pdf;base64,'+'A'.repeat(1500000)};
+  assert.equal(normalizeNotes([{id:'n2',attachments:[huge]}])[0].attachments.length,0);
+});

@@ -118,3 +118,13 @@ Para aplicar no GitHub Pages, substitua os arquivos de mesmo nome e preserve as 
 ## Versão 2.4 — parcelas com valores individuais
 
 Em **Dívidas e acordos → Adicionar/Editar**, informe o valor total da proposta parcelada, a entrada (se houver) e a quantidade de parcelas. Marque **Definir o valor de cada parcela individualmente** para digitar valores diferentes, por exemplo R$ 120,00, R$ 150,00 e R$ 180,00. O aplicativo mostra a soma e impede salvar quando a soma das parcelas mais a entrada não corresponde ao total da proposta. O calendário continua mensal; os valores individuais são preservados em backups JSON e na edição. Backups antigos permanecem compatíveis.
+
+
+## Versão 2.5 — navegação e anexos no Bloco de notas
+
+- Menu lateral com clique direto para **Chaves Pix**, **Dívidas e acordos** e todas as demais telas, sem depender da delegação de eventos do conteúdo.
+- Menu rolável em alturas pequenas e zoom elevado; navegação por `#pix`, `#dividas` e os demais identificadores.
+- **Bloco de notas:** anexar fotos, PDF, documentos, arquivos ZIP e áudio; abrir, baixar e excluir anexos.
+- Cada anexo tem no máximo **900 KB**, cada nota aceita até **8 anexos**, e o conjunto de notas aceita aproximadamente **2 MB** em anexos (conteúdo bruto). Arquivos maiores devem ser guardados em armazenamento externo.
+- Os anexos são gravados como Base64 no mesmo banco local do navegador e incluídos no **backup JSON**. Isso deixa o backup maior. Não envie esse arquivo a repositórios públicos.
+- **Aviso de privacidade:** o site não usa servidor e não protege arquivos com senha. Qualquer pessoa com acesso ao mesmo perfil do navegador pode abrir as notas.

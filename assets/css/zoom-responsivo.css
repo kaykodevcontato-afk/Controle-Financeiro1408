@@ -172,3 +172,10 @@
   .topbar-right .top-add-button { flex: 0 0 auto; }
   .budget-overview, #view-orcamento .mini-stats { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* V2.5 — menu sempre rolável, com botões acessíveis ao aumentar zoom. */
+.sidebar{overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;}
+.sidebar .nav-links{flex:0 0 auto;min-height:max-content;}
+.sidebar .nav-link{position:relative;flex-shrink:0;pointer-events:auto;}
+.sidebar .sidebar-bottom{flex-shrink:0;margin-top:auto;}
+@media(max-height:740px){.sidebar{padding-top:14px;padding-bottom:14px}.sidebar .brand{padding-bottom:12px}.sidebar .nav-link{padding-top:9px;padding-bottom:9px}}

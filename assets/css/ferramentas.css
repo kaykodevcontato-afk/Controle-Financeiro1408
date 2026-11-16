@@ -48,3 +48,16 @@
 .notes-empty-editor p { max-width: 360px; }
 @media (max-width: 880px) { .calculator-layout, .notes-layout { grid-template-columns: 1fr; } .calculator-layout { max-width: 580px; } .notes-list { max-height: 250px; } .notes-body-input { height: 320px; } }
 @media (max-width: 480px) { .calculator-key { min-height: 55px; } .calculator-pad { gap: 7px; } .calculator-layout .panel, .notes-layout .panel { padding: 16px; } .notes-editor-toolbar { align-items: start; } .notes-editor-actions { width: 100%; } .notes-editor-actions .button { flex: 1; } }
+
+/* V2.5 — arquivos anexados às notas */
+.notes-attachments{min-width:0;border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 18px;background:var(--bg)}
+.notes-attachment-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.notes-attachment-top strong{font-size:13px;color:var(--ink)}
+.notes-attachment-top input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.notes-upload-button{cursor:pointer;white-space:normal;text-align:center}
+.notes-upload-help{font-size:11px;margin:8px 0;color:var(--muted)}
+.notes-attachment-list{display:grid;gap:8px;min-width:0}
+.notes-attachment-item{min-width:0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--paper);border:1px solid var(--line);padding:10px;border-radius:9px}
+.notes-attachment-name{font-weight:700;color:var(--ink);flex:1 1 140px;min-width:0;overflow-wrap:anywhere}
+.notes-attachment-item small{color:var(--muted)}
+@media(max-width:480px){.notes-attachment-item .action-small{flex:1 1 auto}}

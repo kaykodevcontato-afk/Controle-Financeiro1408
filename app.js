@@ -1358,11 +1358,19 @@
     });
     window.KaykoFerramentas.mount({
       getNotes: () => db.notes,
-      setNotes: notes => { db.notes = window.KaykoFerramentas.normalizeNotes(notes); return save(); },
+      setNotes: notes => { const previous = db.notes; db.notes = window.KaykoFerramentas.normalizeNotes(notes); if (!save()) { db.notes = previous; return false; } return true; },
       notify
     });
     $('#monthSelect').innerHTML = MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
     document.querySelector('.brand').addEventListener('click', e => { e.preventDefault(); navigate('painel'); });
+    // A navegação tem listener próprio: não depende de outros formulários/eventos delegados.
+    document.querySelectorAll('#sidebar button[data-view]').forEach(button => {
+      button.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); navigate(button.dataset.view); });
+    });
+    window.addEventListener('hashchange', () => {
+      const target = location.hash.slice(1);
+      if (document.getElementById(`view-${target}`) && target !== view) navigate(target);
+    });
     $('#monthSelect').addEventListener('change', e => { db.settings.month = Number(e.target.value); save(); render(); });
     $('#yearSelect').addEventListener('change', e => { const n = Number(e.target.value); if (Number.isInteger(n) && n >= 2000 && n <= 2100) { db.settings.year = n; save(); render(); } else { e.target.value = db.settings.year; notify('Escolha um ano entre 2000 e 2100.', true); } });
     $('#transactionSearch').addEventListener('input', () => { if (view === 'lancamentos') renderTransactions() });
