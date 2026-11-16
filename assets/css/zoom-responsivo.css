@@ -1,0 +1,174 @@
+/* ============================================================================
+   V2.3 — ORÇAMENTO: grade estável para zoom (50%, 100%, 200%, 300%, 400%)
+   Use a largura real do painel em vez de supor a largura da janela.
+   Isso evita o desalinhamento visto na categoria Lazer.
+   ============================================================================ */
+#view-orcamento .budget-rows {
+  container: budget-list / inline-size;
+  min-width: 0;
+  width: 100%;
+}
+#view-orcamento .budget-row {
+  display: grid;
+  grid-template-columns: minmax(170px, 1.3fr) minmax(122px, .85fr) minmax(110px, .85fr) minmax(175px, 1.4fr) minmax(90px, .7fr);
+  gap: 14px;
+  align-items: start;
+  min-width: 0;
+  padding: 18px 0;
+}
+#view-orcamento .budget-row > * {
+  min-width: 0;
+  max-width: 100%;
+}
+#view-orcamento .budget-cat {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+#view-orcamento .budget-cat-title {
+  display: block;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 800;
+}
+#view-orcamento .budget-cat .category-note {
+  display: block;
+  margin: 0;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+#view-orcamento .budget-cat-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 6px 0 0;
+  min-width: 0;
+}
+#view-orcamento .budget-cat-actions .action-small {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+#view-orcamento .budget-limit-field {
+  display: block;
+  min-width: 0;
+}
+#view-orcamento .budget-limit-field input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 39px;
+  margin: 0;
+}
+#view-orcamento .budget-field-label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+#view-orcamento .budget-number,
+#view-orcamento .budget-status,
+#view-orcamento .budget-progress-wrap {
+  text-align: left;
+  padding: 0;
+  min-width: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+#view-orcamento .budget-progress {
+  width: 100%;
+  max-width: 100%;
+}
+#view-orcamento .budget-progress-wrap small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+/* Grade em 3 colunas quando o painel fica estreito (incluindo zoom ampliado). */
+@container budget-list (max-width: 850px) {
+  #view-orcamento .budget-row {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 11px 15px;
+    padding: 17px 0;
+  }
+  #view-orcamento .budget-row .budget-cat {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  #view-orcamento .budget-row .budget-limit-field { grid-column: 2; grid-row: 1; }
+  #view-orcamento .budget-row .budget-number { grid-column: 3; grid-row: 1; }
+  #view-orcamento .budget-row .budget-progress-wrap { grid-column: 2; grid-row: 2; }
+  #view-orcamento .budget-row .budget-status { grid-column: 3; grid-row: 2; }
+}
+/* Celular e zoom elevado: a categoria ocupa sua própria linha. */
+@container budget-list (max-width: 530px) {
+  #view-orcamento .budget-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 13px;
+    padding: 17px 0 19px;
+  }
+  #view-orcamento .budget-row .budget-cat {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  #view-orcamento .budget-row .budget-limit-field { grid-column: 1; grid-row: auto; }
+  #view-orcamento .budget-row .budget-number { grid-column: 2; grid-row: auto; }
+  #view-orcamento .budget-row .budget-progress-wrap { grid-column: 1 / -1; grid-row: auto; }
+  #view-orcamento .budget-row .budget-status { grid-column: 1 / -1; grid-row: auto; }
+  #view-orcamento .budget-cat-actions { margin-top: 4px; }
+}
+@container budget-list (max-width: 285px) {
+  #view-orcamento .budget-row { grid-template-columns: minmax(0, 1fr); }
+  #view-orcamento .budget-row .budget-cat,
+  #view-orcamento .budget-row .budget-limit-field,
+  #view-orcamento .budget-row .budget-number,
+  #view-orcamento .budget-row .budget-progress-wrap,
+  #view-orcamento .budget-row .budget-status { grid-column: 1; grid-row: auto; }
+}
+
+/* Compatibilidade com zoom em telas intermediárias e conteúdos longos. */
+.topbar, .topbar-right, .topbar-backup-actions, .theme-controls,
+.page-heading, .section-toolbar, .panel-heading, .converter-form,
+.wallet-grid, .budget-overview, .mini-stats, .summary-grid {
+  min-width: 0;
+}
+.topbar-right, .topbar-backup-actions, .theme-controls,
+.section-toolbar, .panel-heading {
+  flex-wrap: wrap;
+}
+.topbar .button, .section-toolbar .button, .panel-heading .button {
+  max-width: 100%;
+}
+.page-heading > *, .section-toolbar > *, .panel-heading > * {
+  min-width: 0;
+}
+.panel-heading h2, .panel-heading p, .section-toolbar h2, .section-toolbar p {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .topbar { align-items: flex-start; }
+  .topbar-left { min-width: 0; }
+  .topbar-right { align-items: center; }
+  .topbar-backup-actions { flex: 1 1 180px; }
+}
+@media (max-width: 360px) {
+  .topbar-backup-actions { flex-basis: 100%; }
+  .topbar-right { gap: 6px; }
+  .topbar-right .top-add-button { flex: 0 0 auto; }
+  .budget-overview, #view-orcamento .mini-stats { grid-template-columns: minmax(0, 1fr); }
+}

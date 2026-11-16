@@ -1,0 +1,50 @@
+/* Calculadora e bloco de notas — estilos isolados, responsivos e compatíveis com os temas. */
+.tools-intro { margin-bottom: 20px; color: var(--muted); font-size: 13px; }
+.tools-empty { margin: 0; padding: 25px 14px; text-align: center; color: var(--muted); font-size: 12px; }
+.calculator-layout { display: grid; grid-template-columns: minmax(280px, 475px) minmax(220px, 1fr); gap: 20px; max-width: 1120px; margin: 0 auto; align-items: start; }
+.calculator-layout > .panel { min-width: 0; }
+.calculator-display { border: 1px solid var(--line); border-radius: 15px; padding: 17px; background: var(--bg); margin: 15px 0 18px; }
+.calculator-expression { display: block; width: 100%; border: 0; outline: none; background: transparent; color: var(--ink); font-weight: 800; font-size: clamp(22px, 3vw, 32px); line-height: 1.4; text-align: right; letter-spacing: -.025em; }
+.calculator-expression:focus-visible { outline: 2px solid var(--teal); border-radius: 4px; }
+.calculator-result { display: block; text-align: right; min-height: 25px; font-size: 14px; font-weight: 700; color: var(--teal-dark); margin-top: 5px; overflow-wrap: anywhere; }
+.calculator-result.calculator-error { color: var(--red); }
+.calculator-pad { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; }
+.calculator-key { min-height: 63px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); font-size: 19px; font-weight: 700; transition: background .12s, transform .12s; }
+.calculator-key:hover { background: var(--teal-light); transform: translateY(-1px); }
+.calculator-key:active { transform: none; }
+.calculator-key.operator { background: var(--teal-light); color: var(--teal-dark); }
+.calculator-key.action { color: var(--red); }
+.calculator-key.equals { background: var(--teal); color: white; border-color: var(--teal); }
+.calculator-key.equals:hover { background: var(--teal-dark); }
+.calculator-copy { margin-top: 16px; width: 100%; }
+.calculator-history { display: grid; gap: 8px; }
+.calculator-history-item { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: var(--bg); text-align: left; font-size: 12px; overflow-wrap: anywhere; }
+.calculator-history-item span { min-width: 0; }
+.calculator-history-item strong { color: var(--teal-dark); white-space: nowrap; }
+.calculator-history-item:hover { border-color: var(--teal); }
+.notes-layout { display: grid; grid-template-columns: minmax(245px, .85fr) minmax(0, 1.65fr); gap: 18px; align-items: start; }
+.notes-sidebar, .notes-editor { min-width: 0; }
+.notes-search { width: 100%; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); padding: 12px 13px; margin: 12px 0 9px; }
+.notes-count { color: var(--muted); font-size: 11px; display: block; margin-bottom: 12px; }
+.notes-list { display: grid; gap: 8px; max-height: 580px; overflow-y: auto; }
+.note-list-item { display: grid; gap: 4px; text-align: left; padding: 14px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; width: 100%; }
+.note-list-item:hover, .note-list-item.is-selected { border-color: var(--teal); }
+.note-list-item.is-selected { background: var(--teal-light); }
+.note-list-title { font-size: 13px; font-weight: 800; overflow-wrap: anywhere; }
+.note-list-preview { font-size: 12px; color: var(--muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.note-list-date { font-size: 10px; color: var(--muted); margin-top: 3px; }
+.notes-editor-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
+.notes-editor-toolbar > small { color: var(--teal-dark); }
+.notes-editor-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.notes-delete { color: var(--red); }
+.notes-field-label { display: block; font-weight: 700; font-size: 12px; color: var(--ink); margin: 0 0 6px; }
+.notes-title-input, .notes-body-input { width: 100%; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 11px; padding: 13px 14px; margin-bottom: 17px; }
+.notes-title-input { font-size: 16px; font-weight: 700; }
+.notes-body-input { display: block; min-height: 315px; height: 47vh; max-height: 660px; resize: vertical; font-size: 13px; line-height: 1.7; }
+.notes-editor-footer { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 11px; color: var(--muted); }
+.notes-empty-editor { min-height: 375px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 12px; }
+.notes-empty-editor > span { font-size: 42px; color: var(--teal); }
+.notes-empty-editor h3, .notes-empty-editor p { margin: 0; }
+.notes-empty-editor p { max-width: 360px; }
+@media (max-width: 880px) { .calculator-layout, .notes-layout { grid-template-columns: 1fr; } .calculator-layout { max-width: 580px; } .notes-list { max-height: 250px; } .notes-body-input { height: 320px; } }
+@media (max-width: 480px) { .calculator-key { min-height: 55px; } .calculator-pad { gap: 7px; } .calculator-layout .panel, .notes-layout .panel { padding: 16px; } .notes-editor-toolbar { align-items: start; } .notes-editor-actions { width: 100%; } .notes-editor-actions .button { flex: 1; } }
