@@ -128,3 +128,8 @@ Em **Dívidas e acordos → Adicionar/Editar**, informe o valor total da propost
 - Cada anexo tem no máximo **900 KB**, cada nota aceita até **8 anexos**, e o conjunto de notas aceita aproximadamente **2 MB** em anexos (conteúdo bruto). Arquivos maiores devem ser guardados em armazenamento externo.
 - Os anexos são gravados como Base64 no mesmo banco local do navegador e incluídos no **backup JSON**. Isso deixa o backup maior. Não envie esse arquivo a repositórios públicos.
 - **Aviso de privacidade:** o site não usa servidor e não protege arquivos com senha. Qualquer pessoa com acesso ao mesmo perfil do navegador pode abrir as notas.
+
+
+## Versão 2.6 — várias chaves Pix no mesmo cadastro
+
+Em **Minhas chaves Pix**, clique em **Adicionar chave Pix**. Preencha a identificação, banco e titular uma vez e use **+ Adicionar outra chave** para cadastrar até 20 chaves (CPF, CNPJ, e-mail, celular ou aleatória). Cada chave é exibida individualmente e tem botões próprios de **Mostrar** e **Copiar**. Ao editar um cadastro, é possível adicionar ou remover chaves. Os backups anteriores com uma única chave são migrados automaticamente ao carregar, sem alterar a chave local de armazenamento. Ao excluir um cadastro, todas as suas chaves são excluídas. Faça backup antes de atualizar.

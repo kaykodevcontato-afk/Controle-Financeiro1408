@@ -156,7 +156,19 @@
     const categoryNotes = Object.fromEntries(Object.entries(candidate.categoryNotes && typeof candidate.categoryNotes === 'object' ? candidate.categoryNotes : {}).filter(([key]) => allowedCategories.includes(key)).slice(0, 200).map(([key, val]) => [key, clean(val).slice(0, 500)]));
     const customCryptos = (Array.isArray(candidate.customCryptos) ? candidate.customCryptos : []).slice(0, 200).map(c => ({ symbol: clean(c.symbol).trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15), name: clean(c.name).trim().slice(0, 80), paprikaId: clean(c.paprikaId).trim().slice(0, 100), geckoId: clean(c.geckoId).trim().slice(0, 100) })).filter(c => c.symbol && c.name && !Object.hasOwn(CRYPTO_ASSETS, c.symbol));
     const validCrypto = new Set([...Object.keys(CRYPTO_ASSETS), ...customCryptos.map(c => c.symbol)]);
-    const pixKeys = (Array.isArray(candidate.pixKeys) ? candidate.pixKeys : []).slice(0, 200).map(x => ({ id: clean(x.id || uid()), name: clean(x.name).slice(0, 90), type: ['cpf', 'cnpj', 'email', 'phone', 'random'].includes(x.type) ? x.type : 'random', key: clean(x.key).slice(0, 160), bank: clean(x.bank).slice(0, 100), owner: clean(x.owner).slice(0, 100), notes: clean(x.notes).slice(0, 500) }));
+    const pixKeys = (Array.isArray(candidate.pixKeys) ? candidate.pixKeys : []).slice(0, 200).map(x => {
+      // Migração automática: cadastros antigos com uma chave passam a ter uma lista.
+      const validTypes = ['cpf', 'cnpj', 'email', 'phone', 'random'];
+      const rawKeys = Array.isArray(x.keys) && x.keys.length ? x.keys : [{ type: x.type, key: x.key }];
+      const keys = rawKeys.slice(0, 20).map(entry => ({
+        type: validTypes.includes(entry.type) ? entry.type : 'random',
+        key: clean(entry.key).trim().slice(0, 160)
+      })).filter(entry => entry.key);
+      return { id: clean(x.id || uid()), name: clean(x.name).slice(0, 90),
+        keys, type: keys[0]?.type || 'random', key: keys[0]?.key || '',
+        bank: clean(x.bank).slice(0, 100), owner: clean(x.owner).slice(0, 100),
+        notes: clean(x.notes).slice(0, 500) };
+    });
     const debts = (Array.isArray(candidate.debts) ? candidate.debts : []).slice(0, 1000).map(x => window.KaykoDividas.normalizeDebt({ ...x, id: clean(x.id || uid()) }));
     const notes = window.KaykoFerramentas.normalizeNotes(candidate.notes);
     const bills = candidate.bills.slice(0, 1000).map(b => ({ id: clean(b.id || uid()), name: clean(b.name), category: allowedCategories.includes(b.category) ? b.category : 'Outros', day: clamp(Math.floor(Number(b.day) || 1), 1, 31), amount: amount(b.amount), active: b.active !== false, paidMonths: [...new Set((Array.isArray(b.paidMonths) ? b.paidMonths : []).filter(x => /^\d{4}-(0[1-9]|1[0-2])$/.test(x)))].slice(-120) }));
@@ -596,6 +608,10 @@
     return `<select id="form-pointValueMode" name="pointValueMode" aria-describedby="pointModeExplanation">${POINT_MODE_GROUPS.map(([group, items]) => `<optgroup label="${esc(group)}">${items.map(([key, label]) => `<option value="${key}" ${key === value ? 'selected' : ''}>${esc(label)}</option>`).join('')}</optgroup>`).join('')}</select>`;
   }
   // ===== 03. FORMULÁRIOS DE CADASTRO E EDIÇÃO =====
+  function pixKeyRow(entry) {
+    const options = [['random','Aleatória'],['cpf','CPF'],['cnpj','CNPJ'],['email','E-mail'],['phone','Celular']];
+    return `<div class="pix-multi-row"><label>Tipo de chave <select name="pixEntryType" aria-label="Tipo de chave Pix">${options.map(([code,label]) => `<option value="${code}" ${entry.type === code ? 'selected' : ''}>${label}</option>`).join('')}</select></label><label>Chave Pix * <input name="pixEntryKey" type="text" value="${esc(entry.key || '')}" maxlength="160" autocomplete="off" required placeholder="Informe a chave de recebimento"></label><button class="action-small danger" type="button" data-remove-pix-row aria-label="Remover esta chave">Remover</button></div>`;
+  }
   function openModal(kind, id = null, operation = 'deposit') {
     previousFocus = document.activeElement;
     editing = { kind, id, operation };
@@ -668,15 +684,28 @@
       $('#dialogTitle').textContent = id ? 'Editar categoria' : 'Nova categoria de orçamento';
       $('#formFields').innerHTML = field('name', 'Nome da categoria *', input('name', 'text', found?.name || '', true, 'maxlength="60" placeholder="Ex.: Pets, Assinaturas, Beleza"'), true, 'A categoria também ficará disponível nos gastos e nas contas fixas.') + field('notes', 'Observações da categoria', `<textarea id="form-notes" name="notes" maxlength="500" placeholder="Ex.: Contas e despesas desta categoria">${esc(found?.notes || '')}</textarea>`, true);
     } else if (kind === 'pix') {
-      const x = found || { name: '', type: 'random', key: '', bank: '', owner: '', notes: '' };
-      $('#dialogTitle').textContent = id ? 'Editar chave Pix' : 'Cadastrar chave Pix';
-      $('#formFields').innerHTML = field('name', 'Identificação *', input('name', 'text', x.name, true, 'maxlength="90" placeholder="Ex.: Pix do trabalho"'), true)
-        + field('type', 'Tipo de chave', select('type', [['random', 'Aleatória'], ['cpf', 'CPF'], ['cnpj', 'CNPJ'], ['email', 'E-mail'], ['phone', 'Celular']], x.type))
-        + field('key', 'Chave Pix *', input('key', 'text', x.key, true, 'maxlength="160" autocomplete="off" placeholder="Informe a chave de recebimento"'), true)
+      const x = found || { name: '', keys: [{ type: 'random', key: '' }], bank: '', owner: '', notes: '' };
+      const items = Array.isArray(x.keys) && x.keys.length ? x.keys : [{ type: x.type || 'random', key: x.key || '' }];
+      $('#dialogTitle').textContent = id ? 'Editar cadastro de chaves Pix' : 'Cadastrar chaves Pix';
+      $('#formFields').innerHTML = field('name', 'Identificação *', input('name', 'text', x.name, true, 'maxlength="90" placeholder="Ex.: Minha conta pessoal"'), true)
         + field('bank', 'Banco ou instituição', input('bank', 'text', x.bank, false, 'maxlength="100"'))
         + field('owner', 'Nome do titular', input('owner', 'text', x.owner, false, 'maxlength="100"'))
-        + field('notes', 'Observações', `<textarea id="form-notes" name="notes" maxlength="500">${esc(x.notes)}</textarea>`, true)
-        + '<p class="field-help wide">Salve apenas sua chave de recebimento. Nunca digite senha bancária, código de confirmação, chave privada ou token.</p>';
+        + `<div class="form-field wide pix-multi-section"><div class="pix-multi-heading"><strong>Chaves Pix deste cadastro</strong><button class="button button-outline button-small" id="addPixKeyRow" type="button">+ Adicionar outra chave</button></div><div id="pixKeyRows" class="pix-multi-rows"></div><small class="field-help">Cadastre até 20 chaves. Cada uma poderá ser mostrada ou copiada separadamente.</small></div>`
+        + field('notes', 'Observações', `<textarea id="form-notes" name="notes" maxlength="500">${esc(x.notes || '')}</textarea>`, true)
+        + '<p class="field-help wide">Informe somente chaves de recebimento. Nunca salve senhas bancárias, códigos de verificação ou tokens.</p>';
+      const rows = $('#pixKeyRows');
+      items.forEach(item => rows.insertAdjacentHTML('beforeend', pixKeyRow(item)));
+      $('#addPixKeyRow').addEventListener('click', () => {
+        if (rows.children.length >= 20) { notify('Limite de 20 chaves por cadastro.', true); return; }
+        rows.insertAdjacentHTML('beforeend', pixKeyRow({type:'random', key:''}));
+        rows.lastElementChild.querySelector('input').focus();
+      });
+      rows.addEventListener('click', event => {
+        const button = event.target.closest('[data-remove-pix-row]');
+        if (!button) return;
+        if (rows.children.length === 1) { notify('Mantenha pelo menos uma chave neste cadastro.', true); return; }
+        button.closest('.pix-multi-row').remove();
+      });
     } else if (kind === 'debt') {
       const x = found || {
         creditor: '', original: '', paymentMode: 'review', offerCash: '', offerInstallment: '',
@@ -886,9 +915,17 @@
       }
       db.categoryNotes[name] = String(fields.notes || '').trim().slice(0, 500);
     } else if (kind === 'pix') {
-      const name = String(fields.name || '').trim(), key = String(fields.key || '').trim();
-      if (!name || !key) { notify('Informe um nome e a chave Pix.', true); return; }
-      const record = { id: id || uid(), name: name.slice(0, 90), type: fields.type, key: key.slice(0, 160), bank: String(fields.bank || '').trim().slice(0, 100), owner: String(fields.owner || '').trim().slice(0, 100), notes: String(fields.notes || '').trim().slice(0, 500) };
+      const name = String(fields.name || '').trim();
+      const types = Array.from(form.querySelectorAll('[name="pixEntryType"]')).map(el => el.value);
+      const values = Array.from(form.querySelectorAll('[name="pixEntryKey"]')).map(el => el.value.trim());
+      const keys = values.map((key, i) => ({ type: types[i], key: key.slice(0, 160) }));
+      if (!name || !keys.length || keys.some(x => !x.key)) { notify('Informe uma identificação e todas as chaves Pix.', true); return; }
+      if (new Set(keys.map(x => x.key.toLowerCase())).size !== keys.length) { notify('Há chaves repetidas neste cadastro.', true); return; }
+      const record = { id: id || uid(), name: name.slice(0, 90), keys,
+        type: keys[0].type, key: keys[0].key,
+        bank: String(fields.bank || '').trim().slice(0, 100),
+        owner: String(fields.owner || '').trim().slice(0, 100),
+        notes: String(fields.notes || '').trim().slice(0, 500) };
       if (id) db.pixKeys = db.pixKeys.map(x => x.id === id ? record : x); else db.pixKeys.push(record);
     } else if (kind === 'debt') {
       const creditor = String(fields.creditor || '').trim();
@@ -1267,8 +1304,14 @@
     save(); renderWallets();
   }
   function renderPixKeys() {
-    $('#pixStats').innerHTML = infoCard('Chaves cadastradas', String(db.pixKeys.length), 'Somente chaves de recebimento') + infoCard('Armazenamento', 'Neste navegador', 'Dados incluídos em backup JSON');
-    $('#pixList').innerHTML = db.pixKeys.length ? db.pixKeys.map(x => `<article class="panel pix-card"><div class="panel-heading"><div><h3>${esc(x.name)}</h3><p>${esc({ cpf: 'CPF', cnpj: 'CNPJ', email: 'E-mail', phone: 'Celular', random: 'Chave aleatória' }[x.type] || 'Chave Pix')} · ${esc(x.bank || 'Banco não informado')}</p></div><span class="pill saving">Pix</span></div><div class="pix-key-line"><code class="pix-key-value" data-pix-value="${esc(x.id)}">•••• •••• ••••</code><button type="button" class="action-small" data-toggle-pix="${esc(x.id)}">Mostrar</button><button type="button" class="action-small" data-copy-pix="${esc(x.id)}">Copiar</button></div>${x.owner ? `<p>Titular: ${esc(x.owner)}</p>` : ''}${x.notes ? `<p class="category-note">${esc(x.notes)}</p>` : ''}<div class="wallet-actions"><button class="action-small" type="button" data-edit-pix="${esc(x.id)}">Editar</button><button class="action-small danger" type="button" data-delete-pix="${esc(x.id)}">Excluir</button></div></article>`).join('') : '<div class="panel empty-state">Nenhuma chave Pix cadastrada.</div>';
+    const count = db.pixKeys.reduce((sum, x) => sum + (x.keys?.length || (x.key ? 1 : 0)), 0);
+    $('#pixStats').innerHTML = infoCard('Chaves cadastradas', String(count), `${db.pixKeys.length} cadastro(s) de pessoas ou instituições`) + infoCard('Armazenamento', 'Neste navegador', 'Dados incluídos em backup JSON');
+    const typeLabel = {cpf:'CPF',cnpj:'CNPJ',email:'E-mail',phone:'Celular',random:'Chave aleatória'};
+    $('#pixList').innerHTML = db.pixKeys.length ? db.pixKeys.map(x => {
+      const keys = x.keys?.length ? x.keys : [{type:x.type,key:x.key}];
+      const lines = keys.map((item, index) => `<div class="pix-entry"><span class="pix-entry-type">${esc(typeLabel[item.type] || 'Chave Pix')}</span><div class="pix-key-line"><code class="pix-key-value" data-pix-value="${esc(x.id)}" data-pix-index="${index}">•••• •••• ••••</code><button type="button" class="action-small" data-toggle-pix="${esc(x.id)}" data-pix-index="${index}">Mostrar</button><button type="button" class="action-small" data-copy-pix="${esc(x.id)}" data-pix-index="${index}">Copiar</button></div></div>`).join('');
+      return `<article class="panel pix-card"><div class="panel-heading"><div><h3>${esc(x.name)}</h3><p>${esc(x.bank || 'Banco não informado')} · ${keys.length} chave(s)</p></div><span class="pill saving">Pix</span></div>${lines}${x.owner ? `<p>Titular: ${esc(x.owner)}</p>` : ''}${x.notes ? `<p class="category-note">${esc(x.notes)}</p>` : ''}<div class="wallet-actions"><button class="action-small" type="button" data-edit-pix="${esc(x.id)}">Editar cadastro</button><button class="action-small danger" type="button" data-delete-pix="${esc(x.id)}">Excluir cadastro</button></div></article>`;
+    }).join('') : '<div class="panel empty-state">Nenhuma chave Pix cadastrada.</div>';
   }
   function renderDebts() {
     const calculator = window.KaykoDividas;
@@ -1463,14 +1506,19 @@
       if (elem.dataset.deleteDebt) { removeExtra('debts', elem.dataset.deleteDebt); return; }
       if (elem.dataset.togglePix) {
         const x = db.pixKeys.find(r => r.id === elem.dataset.togglePix);
-        const node = Array.from(document.querySelectorAll('[data-pix-value]')).find(n => n.dataset.pixValue === elem.dataset.togglePix);
-        if (!x || !node) return;
-        const show = elem.textContent === 'Mostrar'; node.textContent = show ? x.key : '•••• •••• ••••'; elem.textContent = show ? 'Ocultar' : 'Mostrar'; return;
+        const index = Number(elem.dataset.pixIndex || 0);
+        const key = (x?.keys?.length ? x.keys[index] : {key:x?.key})?.key;
+        const node = Array.from(document.querySelectorAll('[data-pix-value]')).find(n => n.dataset.pixValue === elem.dataset.togglePix && Number(n.dataset.pixIndex) === index);
+        if (!key || !node) return;
+        const show = elem.textContent === 'Mostrar'; node.textContent = show ? key : '•••• •••• ••••'; elem.textContent = show ? 'Ocultar' : 'Mostrar'; return;
       }
       if (elem.dataset.copyPix) {
-        const x = db.pixKeys.find(r => r.id === elem.dataset.copyPix); if (!x) return;
+        const x = db.pixKeys.find(r => r.id === elem.dataset.copyPix);
+        const index = Number(elem.dataset.pixIndex || 0);
+        const key = (x?.keys?.length ? x.keys[index] : {key:x?.key})?.key;
+        if (!key) return;
         if (!navigator.clipboard?.writeText) { notify('Cópia indisponível neste navegador. Use Mostrar para selecionar a chave.', true); return; }
-        void navigator.clipboard.writeText(x.key).then(() => notify('Chave Pix copiada.'), () => notify('Cópia bloqueada pelo navegador.', true)); return;
+        void navigator.clipboard.writeText(key).then(() => notify('Chave Pix copiada.'), () => notify('Cópia bloqueada pelo navegador.', true)); return;
       }
       if (elem.dataset.editWallet) { openModal('wallet', elem.dataset.editWallet); return; }
       if (elem.dataset.deleteWallet) { deleteWallet(elem.dataset.deleteWallet); return; }
